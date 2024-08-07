@@ -120,7 +120,6 @@ class TestProductModel(unittest.TestCase):
         product.id = None
         product.create()
         self.assertIsNotNone(product.id)
-        logger.info(product)
 
         product.description = "Updated description"
         persisted_id = product.id
@@ -128,7 +127,6 @@ class TestProductModel(unittest.TestCase):
 
         self.assertEqual(product.id, persisted_id)
         self.assertEqual(product.description, "Updated description")
-        logger.info(product)
 
         all_product_list = Product.all()       
         self.assertEqual(len(all_product_list), 1)
@@ -164,7 +162,7 @@ class TestProductModel(unittest.TestCase):
         for product in new_product_list:
             product.create()
         
-        name = products[0].name
+        name = new_product_list[0].name
         products_by_name_count = len([product for product in new_product_list if product.name == name])
         found = Product.find_by_name(name)
         
@@ -192,8 +190,8 @@ class TestProductModel(unittest.TestCase):
         for product in new_product_list:
             product.create()
 
-        category = products[0].category
-        products_by_category_count = len([product for product in products if product.category == category])
+        category = new_product_list[0].category
+        products_by_category_count = len([product for product in new_product_list if product.category == category])
         found = Product.find_by_category(category)
 
         self.assertEqual(found.count(), products_by_category_count)
