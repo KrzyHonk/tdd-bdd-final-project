@@ -128,7 +128,7 @@ class TestProductModel(unittest.TestCase):
         self.assertEqual(product.id, persisted_id)
         self.assertEqual(product.description, "Updated description")
 
-        all_product_list = Product.all()       
+        all_product_list = Product.all()
         self.assertEqual(len(all_product_list), 1)
         self.assertEqual(all_product_list[0].id, persisted_id)
         self.assertEqual(all_product_list[0].description, "Updated description")
@@ -137,22 +137,22 @@ class TestProductModel(unittest.TestCase):
         """It should Delete a Product"""
         product = ProductFactory()
         product.create()
-        all_product_list = Product.all() 
+        all_product_list = Product.all()
         self.assertEqual(len(all_product_list), 1)
-        
+
         product.delete()
         all_product_list = Product.all()
         self.assertEqual(len(all_product_list), 0)
-    
+
     def test_get_all_products(self):
         """It should load all Products from database"""
-        all_product_list = Product.all()        
+        all_product_list = Product.all()
         self.assertEqual(all_product_list, [])
-        
+
         new_product_list = ProductFactory.create_batch(5)
         for product in new_product_list:
             product.create()
-            
+
         all_product_list = Product.all()
         self.assertEqual(len(all_product_list), 5)
 
@@ -161,11 +161,11 @@ class TestProductModel(unittest.TestCase):
         new_product_list = ProductFactory.create_batch(5)
         for product in new_product_list:
             product.create()
-        
+
         name = new_product_list[0].name
         products_by_name_count = len([product for product in new_product_list if product.name == name])
         found = Product.find_by_name(name)
-        
+
         self.assertEqual(found.count(), products_by_name_count)
         for product in found:
             self.assertEqual(product.name, name)
