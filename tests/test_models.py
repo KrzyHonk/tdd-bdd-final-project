@@ -27,7 +27,7 @@ import os
 import logging
 import unittest
 from decimal import Decimal
-from service.models import Product, Category, db
+from service.models import Product, Category, db, DataValidationError
 from service import app
 from tests.factories import ProductFactory
 
@@ -121,8 +121,8 @@ class TestProductModel(unittest.TestCase):
         product.create()
         self.assertIsNotNone(product.id)
 
-        product.description = "Updated description"
         persisted_id = product.id
+        product.description = "Updated description"
         product.update()
 
         self.assertEqual(product.id, persisted_id)
@@ -132,6 +132,57 @@ class TestProductModel(unittest.TestCase):
         self.assertEqual(len(all_product_list), 1)
         self.assertEqual(all_product_list[0].id, persisted_id)
         self.assertEqual(all_product_list[0].description, "Updated description")
+
+    def test_update_a_product_with_no_id(self):
+        """It should throw an Exception when trying to Update a Product with ID set to None"""
+        product = ProductFactory()
+        product.id = None
+        product.create()
+        self.assertIsNotNone(product.id)
+
+        product.id = None
+        product.description = "Updated description"
+        with self.assertRaises(DataValidationError):
+            product.update()
+
+    def test_deserialize_a_product_with_invalid_availability(self):
+        """It should throw an Exception when trying to deserialize a Product with Availability set not to a Bool value"""
+        product = ProductFactory()
+        product.id = None
+        product.create()
+        self.assertIsNotNone(product.id)
+
+        serialized_product = product.serialize()
+        serialized_product["available"] = "I'm not a Bool"
+
+        with self.assertRaises(DataValidationError):
+            product.deserialize(serialized_product)
+
+    def test_deserialize_a_product_with_invalid_data(self):
+        """It should throw an Exception when trying to deserialize a Product with invalid data"""
+        product = ProductFactory()
+        product.id = None
+        product.create()
+        self.assertIsNotNone(product.id)
+
+        serialized_product = product.serialize()
+        serialized_product["category"] = None
+
+        with self.assertRaises(DataValidationError):
+            product.deserialize(serialized_product)
+
+    def test_deserialize_a_product_with_missing_data(self):
+        """It should throw an Exception when trying to deserialize a Product with missing data"""
+        product = ProductFactory()
+        product.id = None
+        product.create()
+        self.assertIsNotNone(product.id)
+
+        serialized_product = product.serialize()
+        serialized_product["category"] = "Wrong data"
+
+        with self.assertRaises(DataValidationError):
+            product.deserialize(serialized_product)
 
     def test_delete_a_product(self):
         """It should Delete a Product"""
@@ -197,3 +248,18 @@ class TestProductModel(unittest.TestCase):
         self.assertEqual(found.count(), products_by_category_count)
         for product in found:
             self.assertEqual(product.category, category)
+
+    def test_find_by_price(self):
+        """It should Find Products by Price"""
+        new_product_list = ProductFactory.create_batch(10)
+        for product in new_product_list:
+            product.create()
+
+        price = new_product_list[0].price
+        products_by_price_count = len([product for product in new_product_list if product.price == price])
+        # Converting price to string to cover line 220 from models.py
+        found = Product.find_by_price(str(price))
+
+        self.assertEqual(found.count(), products_by_price_count)
+        for product in found:
+            self.assertEqual(product.price, price)
